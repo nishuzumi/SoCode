@@ -36,9 +36,9 @@ export const networks: Network[] = [
   },
   {
     name: "Base",
-    rpc: "https://mainnet.base.org",
+    rpc: "https://sepolia.base.org",
     status: "active",
-    chainId: 8453,
+    chainId: 84532,
   },
   {
     name: "Scroll",
@@ -130,7 +130,7 @@ export function NetworkStatus() {
         <div className="absolute top-full mt-2 w-48 bg-neutral-900 border border-neutral-800 rounded-lg shadow-lg z-50">
           {networks.map((network) => (
             <div
-              key={network.rpc}
+              key={network.name}
               className="px-4 py-2 hover:bg-neutral-800 cursor-pointer"
               onClick={() => {
                 setSelectedNetwork(network);

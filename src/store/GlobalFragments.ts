@@ -8,32 +8,32 @@ import { VM } from "@ethereumjs/vm";
 import { EthVM } from "@/lib/vm";
 
 export type FragmentCodeDetail = {
-    runnableCode?: string;
-    topLevelCode?: string;
-    globalCode?: string;
+  runnableCode?: string;
+  topLevelCode?: string;
+  globalCode?: string;
 };
 export enum RunnedStatus {
-    NotRunned,
-    Running,
-    Success,
-    Error,
+  NotRunned,
+  Running,
+  Success,
+  Error,
 }
 // 定义一个类型来表示每个代码段的数据
 export type FragmentData = {
-    uuid: string;
-    code: string;
-    codeType?: "code" | "toplevelcode" | "globalcode";
-    runIndex?: number;
-    detailCode?: FragmentCodeDetail;
-    result?: DecodeVariableResult;
-    error?: CompileError[];
-    scrollTo?: (position?: "result" | "code") => void;
+  uuid: string;
+  code: string;
+  codeType?: "code" | "toplevelcode" | "globalcode";
+  runIndex?: number;
+  detailCode?: FragmentCodeDetail;
+  result?: DecodeVariableResult;
+  error?: CompileError[];
+  scrollTo?: (position?: "result" | "code") => void;
 };
 
 export type FragmentSnapshot = FragmentData & {
-    source: Source;
-    lastLogs: string[][];
-    logs: string[][];
+  source: Source;
+  lastLogs: string[][];
+  logs: string[][];
 };
 
 export const RunIndexAtom = atom<number>(1);
@@ -43,22 +43,26 @@ export const FragmentsSnapshot = atom<FragmentSnapshot[]>([]);
 FragmentsSnapshot.debugLabel = "FragmentsSnapshot";
 
 export const LastFragmentSnapshot = atom<FragmentSnapshot | undefined>(
-    (get) => {
-        const fragments = get(FragmentsSnapshot);
-        if (fragments.length === 0) return undefined;
-        return fragments[fragments.length - 1];
-    }
+  (get) => {
+    const fragments = get(FragmentsSnapshot);
+    if (fragments.length === 0) return undefined;
+    return fragments[fragments.length - 1];
+  }
 );
 
 export const FragmentsAtom = atomWithImmer<FragmentData[]>([
-    {
-        uuid: nanoid(),
-        code: "uint x = 10;\nx",
-    },
-    {
-        uuid: nanoid(),
-        codeType:"globalcode",
-        code: `abstract contract ERC20 {
+  {
+    uuid: nanoid(),
+    code: "vm.broadcast(0x3e00041b6f008a969598474d48a2e72ec3db7860a9c3e61c2ea8c1bb5010e217);",
+  },
+  {
+    uuid: nanoid(),
+    code: "uint x = 10;\nx",
+  },
+  {
+    uuid: nanoid(),
+    codeType: "globalcode",
+    code: `abstract contract ERC20 {
     /*//////////////////////////////////////////////////////////////
                                   EVENTS
     //////////////////////////////////////////////////////////////*/
@@ -216,19 +220,20 @@ contract A is ERC20{
     _mint(msg.sender,1000 ether);
   }
 }`,
-    },
-    {
-        uuid: nanoid(),
-        code: `A a = new A();
+  },
+  {
+    uuid: nanoid(),
+    code: `A a = new A();
+console.log(address(a));
 a.balanceOf(address(this))`,
-    }
+  }
 ]);
 FragmentsAtom.debugLabel = "FragmentsAtom";
 
 export const FragmentAtomsAtom = splitAtom(FragmentsAtom);
 FragmentAtomsAtom.debugLabel = "FragmentAtomsAtom"
 
-export const getCurrentFragment = (fragments: FragmentData[],uuid: string) => {
+export const getCurrentFragment = (fragments: FragmentData[], uuid: string) => {
   return fragments.find((fragment) => fragment.uuid === uuid);
 }
 

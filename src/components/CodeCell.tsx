@@ -261,7 +261,7 @@ export function FragmentResult({
                 </div>
                 <pre className="text-sm whitespace-pre-wrap font-mono bg-neutral-900/30 rounded-lg p-3 border border-neutral-800/50 text-neutral-300">
                   {diffLogs?.map((log, index) => (
-                    <div key={index}>{log}</div>
+                    <div key={index}>{log.join(" ")}</div>
                   ))}
                 </pre>
               </motion.div>

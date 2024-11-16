@@ -6,7 +6,7 @@ import { fromBytes,createPublicClient, http, PublicClient, toHex } from "viem";
 import { Source } from "./source";
 import { RPCBlockChain, RPCStateManager } from '@ethereumjs/statemanager'
 import { Network } from "@/components/NetworkStatus";
-import { customVMHandler } from "./vm/precompile";
+import { CustomPrecompile, customVMHandler } from "./vm/precompile";
 import { decodeConsoleLog } from "./contract/console";
 import { parseConsoleLog } from "./contract/consoleLogger";
 
@@ -50,6 +50,7 @@ export class EthVM {
   rpcStateManager!: RPCStateManager;
   rpcProvider!: PublicClient;
   vm!: VM;
+  customPrecompile!: CustomPrecompile;
 
   public consoleLogs: string[][] = [];
   protected constructor() { }
@@ -62,6 +63,7 @@ export class EthVM {
       vm.rpcStateManager = struct.rpcStateManager
       vm.rpcProvider = struct.rpcProvider
     }
+    vm.customPrecompile = new CustomPrecompile()
     vm.vm = await VM.create({
       common: new Common({ chain: Chain.Mainnet }),
       stateManager: vm.rpcStateManager,
@@ -70,14 +72,21 @@ export class EthVM {
         customPrecompiles:[
           {
             address: Address.fromString("0xf000000000000000000000000000000000000000"),
-            function: customVMHandler
+            function: vm.customPrecompile.customVMHandler.bind(vm.customPrecompile)
           }
         ]
       }
     })
-    // vm.vm.evm.events?.on("step", (event) => {
-    //   console.log(event)
-    // })
+    vm.customPrecompile.vm = vm
+    vm.vm.evm.events?.on("step", async (event) => {
+      await vm.customPrecompile.onStepHook(event)
+    })
+    vm.vm.evm.events?.on("beforeMessage", async (event) => {
+      await vm.customPrecompile.onBeforeMessage(event)
+    })
+    vm.vm.evm.events?.on("afterMessage", async (event) => {
+      await vm.customPrecompile.onAfterMessage(event)
+    })
     await vm.init()
     return vm;
   }

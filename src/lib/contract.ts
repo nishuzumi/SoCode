@@ -28,12 +28,19 @@ ${'scriptImport'}
 ${'globalCode'}
 
 interface VM{
-  function test() external returns (bytes memory);
+  function broadcast(uint256 privateKey) external returns (bool);
+}
+
+library vm {
+    VM constant VM_ADDRESS = VM(0xf000000000000000000000000000000000000000);
+
+    function broadcast(uint256 privateKey) internal returns (bool) {
+        return VM_ADDRESS.broadcast(privateKey);
+    }
 }
 
 contract ${'contractName'}{
     ${'topLevelCode'}
-    VM constant vm = VM(0xf000000000000000000000000000000000000000);
     /// @notice Script entry point
     function run() public {
         ${'runCode'}
