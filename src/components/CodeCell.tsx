@@ -61,6 +61,7 @@ export function CodeCell({ id, onDelete, initialStatus = 'idle' }: CodeCellProps
   const [status, setStatus] = useState<'idle' | 'running' | 'success' | 'error'>(initialStatus);
   const [height, setHeight] = useState('auto');
   const [codeType, setCodeType] = useState<'code' | 'toplevelcode' | 'globalcode'>('code');
+  const [isEditorFocused, setIsEditorFocused] = useState(false);
 
   useEffect(() => {
     if (initialStatus === 'success') {
@@ -125,9 +126,9 @@ Reason: Always fails`);
   }, [initialStatus]);
 
   useEffect(() => {
+    const oneLineHeight = 19.59;
     const lines = code.split('\n').length;
-    const minHeight = 200;
-    const calculatedHeight = Math.max(minHeight, lines * 24);
+    const calculatedHeight = Math.max(oneLineHeight, lines * oneLineHeight) + 8;
     setHeight(`${calculatedHeight}px`);
   }, [code]);
 
@@ -135,15 +136,16 @@ Reason: Always fails`);
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative ml-8"
+      className="relative"
     >
-      <div className="absolute -left-8 top-8 w-8 h-px bg-gradient-to-r from-blue-500/50 to-transparent"></div>
-
       <div className={cn(
-        "flex flex-col rounded-xl overflow-hidden border bg-neutral-900/50 backdrop-blur-xl transition-shadow duration-300",
-        status === 'success' && "border-green-500/20 shadow-[0_0_25px_rgba(34,197,94,0.1)]",
-        status === 'error' && "border-red-500/20 shadow-[0_0_25px_rgba(239,68,68,0.1)]",
-        status === 'idle' && "border-neutral-800/50 hover:shadow-[0_0_25px_rgba(59,130,246,0.1)]"
+        "flex flex-col rounded-xl overflow-hidden border bg-neutral-900/50 backdrop-blur-xl transition-shadow duration-300 border-neutral-800/50",
+        isEditorFocused && (
+          status === 'success' ? "border-green-500/20 shadow-[0_0_25px_rgba(34,197,94,0.1)]" :
+          status === 'error' ? "border-red-500/20 shadow-[0_0_25px_rgba(239,68,68,0.1)]" :
+          status === 'idle' ? "border-blue-500/20 shadow-[0_0_25px_rgba(59,130,246,0.1)]" :
+          ""
+        )
       )}>
         {/* Code Editor Section */}
         <div className="flex-1 flex flex-col">
@@ -191,6 +193,8 @@ Reason: Always fails`);
               extensions={[javascript({ jsx: true })]}
               onChange={(value) => setCode(value)}
               className="text-sm"
+              onFocus={() => setIsEditorFocused(true)}
+              onBlur={() => setIsEditorFocused(false)}
             />
           </div>
         </div>

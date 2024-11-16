@@ -29,8 +29,6 @@ export function Notebook() {
 
         {/* Code Cells */}
         <div className="space-y-6 relative">
-          <div className="absolute left-4 top-0 bottom-0 w-px bg-gradient-to-b from-blue-500/50 to-purple-500/50 blur-[0.5px]"></div>
-          
           {cells.map(({ id, status }) => (
             <CodeCell key={id} id={id} initialStatus={status} />
           ))}
