@@ -4,6 +4,8 @@ import { atomWithImmer } from "jotai-immer";
 import { nanoid } from "nanoid";
 import { splitAtom } from "jotai/utils";
 import { Source } from "@/lib/source";
+import { VM } from "@ethereumjs/vm";
+import { EthVM } from "@/lib/vm";
 
 export type FragmentCodeDetail = {
     runnableCode?: string;
@@ -20,6 +22,7 @@ export enum RunnedStatus {
 export type FragmentData = {
     uuid: string;
     code: string;
+    codeType?: "code" | "toplevelcode" | "globalcode";
     runIndex?: number;
     detailCode?: FragmentCodeDetail;
     result?: DecodeVariableResult;
@@ -29,6 +32,8 @@ export type FragmentData = {
 
 export type FragmentSnapshot = FragmentData & {
     source: Source;
+    lastLogs: string[][];
+    logs: string[][];
 };
 
 export const RunIndexAtom = atom<number>(1);
@@ -52,8 +57,8 @@ export const FragmentsAtom = atomWithImmer<FragmentData[]>([
     },
     {
         uuid: nanoid(),
-        code: `//:GlobalCode
-abstract contract ERC20 {
+        codeType:"globalcode",
+        code: `abstract contract ERC20 {
     /*//////////////////////////////////////////////////////////////
                                   EVENTS
     //////////////////////////////////////////////////////////////*/

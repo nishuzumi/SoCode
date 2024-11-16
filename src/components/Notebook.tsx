@@ -5,8 +5,12 @@ import { Logo } from "./Logo";
 import { NetworkStatus } from "./NetworkStatus";
 import { Toolbar } from "./Toolbar/Toolbar";
 import { AddCellButton } from "./AddCellButton";
-import { useAtom, useSetAtom } from "jotai";
-import { AddFragment, FragmentAtomsAtom, FragmentData } from "@/store/GlobalFragments";
+import { getDefaultStore, useAtom, useSetAtom } from "jotai";
+import {
+  AddFragment,
+  FragmentAtomsAtom,
+  FragmentData,
+} from "@/store/GlobalFragments";
 
 export function Notebook() {
   const [fragmentAtoms] = useAtom(FragmentAtomsAtom);
@@ -29,14 +33,17 @@ export function Notebook() {
 
         {/* Code Cells */}
         <div className="space-y-6 relative">
-          {fragmentAtoms.map((fragmentAtom, index) => (
-            <CodeCell
-              className="mb-2"
-              key={(fragmentAtom as unknown as FragmentData).uuid}
-              fragmentAtom={fragmentAtom}
-              index={index}
-            />
-          ))}
+          {fragmentAtoms.map((fragmentAtom, index) => {
+            const fragment = getDefaultStore().get(fragmentAtom);
+            return (
+              <CodeCell
+                className="mb-2"
+                key={fragment.uuid}
+                fragmentAtom={fragmentAtom}
+                index={index}
+              />
+            );
+          })}
         </div>
 
         <AddCellButton onClick={() => addFragment()} />

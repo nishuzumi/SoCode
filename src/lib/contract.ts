@@ -22,17 +22,21 @@ export function contractTemplate(strings: TemplateStringsArray, ...keys: (keyof 
 }
 
 export const defaultTemplate = contractTemplate`// SPDX-License-Identifier: UNLICENSED
-  pragma solidity ^0.8.0;
-  
-  ${'scriptImport'}
-  ${'globalCode'}
-  
-  contract ${'contractName'} {
-      ${'topLevelCode'}
-    
-      /// @notice Script entry point
-      function run() public {
-          ${'runCode'}
-      }
-  }
-  `
+pragma solidity ^0.8.0;
+
+${'scriptImport'}
+${'globalCode'}
+
+interface VM{
+  function test() external returns (bytes memory);
+}
+
+contract ${'contractName'}{
+    ${'topLevelCode'}
+    VM constant vm = VM(0xf000000000000000000000000000000000000000);
+    /// @notice Script entry point
+    function run() public {
+        ${'runCode'}
+    }
+}
+`

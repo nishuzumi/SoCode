@@ -46,12 +46,7 @@ export function CodeTypeSelector({ value, onChange }: CodeTypeSelectorProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button
-                        className="rounded-full hover:bg-neutral-700/50 text-neutral-500 hover:text-neutral-300 transition-colors duration-200"
-                        onClick={(e) => e.stopPropagation()}
-                      >
                         <HelpCircle className="w-3 h-3" />
-                      </button>
                     </TooltipTrigger>
                     <TooltipContent
                       side="bottom"

@@ -4,11 +4,11 @@ import { useEffectOnce } from "react-use";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { solidity } from "@replit/codemirror-lang-solidity";
-import { Play, Terminal, Code2, PlayCircle } from "lucide-react";
+import { Play, Terminal, Code2, PlayCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CodeTypeSelector } from "./CodeTypeSelector";
 import { atom, PrimitiveAtom, useAtomValue, useSetAtom } from "jotai";
-import { FragmentData } from "@/store/GlobalFragments";
+import { FragmentData, FragmentsSnapshot } from "@/store/GlobalFragments";
 import { useImmerAtom } from "jotai-immer";
 import { tokyoNight } from "@uiw/codemirror-theme-tokyo-night";
 import { CompileError, DecodeVariableResult } from "@/types";
@@ -25,9 +25,14 @@ GlobalSelect.debugLabel = "GlobalSelect";
 
 export function CodeCell({ index, className, fragmentAtom }: CodeCellProps) {
   const [fragment, setFragment] = useImmerAtom(fragmentAtom);
-  const [codeType, setCodeType] = useState<
-    "code" | "toplevelcode" | "globalcode"
-  >("code");
+  const [codeType, setCodeType] = [
+    fragment.codeType ?? "code",
+    (value: "code" | "toplevelcode" | "globalcode") => {
+      setFragment((draft) => {
+        draft.codeType = value;
+      });
+    },
+  ];
 
   fragmentAtom.debugLabel = "FragmentAtomsAtom:" + index;
 
@@ -54,14 +59,7 @@ export function CodeCell({ index, className, fragmentAtom }: CodeCellProps) {
     setFragment((draft) => {
       draft.scrollTo = (position: "code" | "result" = "result") => {
         if (domRef.current) {
-          const target =
-            position === "result"
-              ? domRef.current.querySelector(".view-tag")
-              : domRef.current;
-          target?.scrollIntoView({
-            behavior: "smooth",
-            block: "end",
-          });
+          // TODO: pending
         }
       };
     });
@@ -79,7 +77,7 @@ export function CodeCell({ index, className, fragmentAtom }: CodeCellProps) {
     return "idle";
   }, [fragment.error, fragment.result]);
 
-  const runCode = useRunCode();
+  const [runCode, codeRunning] = useRunCode();
 
   return (
     <motion.div
@@ -87,6 +85,22 @@ export function CodeCell({ index, className, fragmentAtom }: CodeCellProps) {
       animate={{ opacity: 1, y: 0 }}
       className="relative"
     >
+      <AnimatePresence>
+        {codeRunning && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 flex items-center justify-center rounded-xl bg-neutral-900/50 backdrop-blur-sm"
+          >
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+              <span className="text-sm text-neutral-200">Running...</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div
         className={cn(
           "flex flex-col rounded-xl overflow-hidden border bg-neutral-900/50 backdrop-blur-xl transition-shadow duration-300 border-neutral-800/50",
@@ -193,9 +207,24 @@ export function FragmentResult({
   fragment: FragmentData;
   status: "idle" | "running" | "success" | "error";
 }) {
+  const snapshots = useAtomValue(FragmentsSnapshot);
+  const currentSnapshot = snapshots.findLast((s) => s.uuid === fragment.uuid);
+  const showResult = useMemo(
+    () => fragment.result?.value || fragment.error,
+    [fragment.result, fragment.error]
+  );
+
+  const diffLogs = useMemo(() => {
+    return currentSnapshot?.logs?.slice(currentSnapshot?.lastLogs?.length);
+  }, [currentSnapshot]);
+
+  const showLogs = useMemo(() => {
+    return (diffLogs?.length ?? 0) > 0;
+  }, [diffLogs]);
+
   return (
     <AnimatePresence>
-      {(fragment.result?.value || fragment.error) && (
+      {(showResult || showLogs) && (
         <motion.div
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: "auto", opacity: 1 }}
@@ -219,43 +248,61 @@ export function FragmentResult({
           </div>
 
           <div className="p-4 space-y-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="space-y-2"
-            >
-              <div className="flex items-center gap-2 text-sm font-medium text-neutral-400">
-                <span>
-                  {status === "error"
-                    ? "Error Details"
-                    : "Contract Interaction"}
-                </span>
-                <PlayCircle
-                  className={cn(
-                    "w-4 h-4",
-                    status === "error" ? "text-red-500" : "text-emerald-500"
-                  )}
-                />
-              </div>
-              <pre
-                className={cn(
-                  "text-sm whitespace-pre-wrap font-mono bg-neutral-900/30 rounded-lg p-3 border transition-colors duration-300",
-                  status === "error"
-                    ? "border-red-500/20 bg-red-500/5 text-red-200"
-                    : "border-neutral-800/50 text-neutral-300"
-                )}
+            {/* 添加 Logs 部分 */}
+            {showLogs && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="space-y-2"
               >
-                {fragment.result && (
-                  <RenderResult
-                    variable={fragment.result?.variable}
-                    value={fragment.result?.value}
+                <div className="flex items-center gap-2 text-sm font-medium text-neutral-400">
+                  <span>Logs</span>
+                  <Terminal className="w-4 h-4 text-blue-500" />
+                </div>
+                <pre className="text-sm whitespace-pre-wrap font-mono bg-neutral-900/30 rounded-lg p-3 border border-neutral-800/50 text-neutral-300">
+                  {diffLogs?.map((log, index) => (
+                    <div key={index}>{log}</div>
+                  ))}
+                </pre>
+              </motion.div>
+            )}
+            {showResult && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="space-y-2"
+              >
+                <div className="flex items-center gap-2 text-sm font-medium text-neutral-400">
+                  <span>
+                    {status === "error"
+                      ? "Error Details"
+                      : "Contract Interaction"}
+                  </span>
+                  <PlayCircle
+                    className={cn(
+                      "w-4 h-4",
+                      status === "error" ? "text-red-500" : "text-emerald-500"
+                    )}
                   />
-                )}
-                {fragment.error && (
-                  <ErrorMessage error={fragment.error} />
-                )}
-              </pre>
-            </motion.div>
+                </div>
+                <pre
+                  className={cn(
+                    "text-sm whitespace-pre-wrap font-mono bg-neutral-900/30 rounded-lg p-3 border transition-colors duration-300",
+                    status === "error"
+                      ? "border-red-500/20 bg-red-500/5 text-red-200"
+                      : "border-neutral-800/50 text-neutral-300"
+                  )}
+                >
+                  {fragment.result && (
+                    <RenderResult
+                      variable={fragment.result?.variable}
+                      value={fragment.result?.value}
+                    />
+                  )}
+                  {fragment.error && <ErrorMessage error={fragment.error} />}
+                </pre>
+              </motion.div>
+            )}
           </div>
         </motion.div>
       )}
@@ -300,15 +347,23 @@ const ErrorMessageSeverityColor: Record<string, string> = {
   info: "text-blue-500",
 };
 
-export function ErrorMessage({ error }: { error: CompileError[] }) {
+export function ErrorMessage({
+  error,
+}: {
+  error: CompileError[] | { error: string; errorType: string }[];
+}) {
   return (
     <div className="mt-1">
       {error.map((e, index) => (
         <div key={index}>
-          <pre
-            className={cn("text-xs", ErrorMessageSeverityColor[e.severity])}
-            dangerouslySetInnerHTML={{ __html: e.formattedMessage }}
-          />
+          {"severity" in e ? (
+            <pre
+              className={cn("text-xs", ErrorMessageSeverityColor[e.severity])}
+              dangerouslySetInnerHTML={{ __html: e.formattedMessage }}
+            />
+          ) : (
+            <div className="text-xs text-red-500">{e.error}</div>
+          )}
         </div>
       ))}
     </div>

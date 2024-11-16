@@ -10,6 +10,7 @@ import { CodeType, CompiledContract, SourceType } from "../types";
 import { getContractNode, searchInspectorType, searchRunVariables } from "./utils";
 import { getLastStackValue } from "./vm";
 import { FragmentCodeDetail } from "@/store/GlobalFragments";
+import { consoleSol } from "./contract/console";
 const VERSION = "soljson-v0.8.20+commit.a1b79de6.js"
 
 export type CompileResult = {
@@ -37,11 +38,15 @@ export class Source {
   private globalCode: string[] = [];
   private imports: string[] = [];
   private dry = false;
-  private sourceType: SourceType = SourceType.Normal;
   private appendCode: string[] = [];
 
   private variables: Map<string, VariableDeclaration> = new Map()
   private sourceMap: Instruction[] | null = null
+
+  constructor() {
+    // load console.sol
+    this.imports.push(...consoleSol.split("\n"))
+  }
 
   private setDry(dry: boolean) {
     this.dry = dry;
@@ -198,6 +203,12 @@ export class Source {
     const compiled = (await solidityCompiler({
       version: `https://binaries.soliditylang.org/bin/${VERSION}`,
       contractBody: source,
+      options: {
+        optimizer: {
+          enabled: false,
+          runs:0
+        }
+      }
     }));
     this.compiled = compiled as CompiledContract;
     if (this.compiled.errors && this.compiled.errors.filter((e) => e.severity === "error").length > 0) {
