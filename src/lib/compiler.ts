@@ -3,8 +3,7 @@ let currentId = 0;
 const worker = new Worker(
     new URL("./browser.solidity.worker.ts", import.meta.url), {
     type: 'classic'
-}
-);
+});
 
 export const solidityCompiler = async ({
     version,
