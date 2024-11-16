@@ -56,12 +56,6 @@ export class EthVM {
    * @param data default is run()
    */
   async runCode(source: Source, withStop: boolean = true) {
-    // this.vm.evm.events!.on('step', function (data) {
-    //   console.log(data)
-    //   console.log(`Opcode: ${data.opcode.name}\tStack: ${data.stack}`)
-    //   throw new Error("stop")
-    // })
-
     const result = await this.vm.evm.runCode({
       code: withStop ? await source.getBytecodeWithStop() : await source.getBytecode(),
       data:Buffer.from("c0406226","hex"),

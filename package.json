@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "bundle-solc": "bunx browserify ./src/lib/bundler.js > ./src/lib/bundle_solc.js -t babelify"
   },
   "dependencies": {
     "@codemirror/lang-javascript": "^6.2.1",
