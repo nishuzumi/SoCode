@@ -9,11 +9,11 @@ import {
 import { cn } from "@/lib/utils";
 
 const CODE_TYPES = {
-  code: "Standard contract code that will be deployed to the blockchain. This is where you write your main contract logic, state variables, and functions.",
+  code: "Directly run code like uint x = 1;",
   toplevelcode:
-    "Code that runs only during contract creation time. Useful for initialization logic and constructor parameters.",
+    "define global variables and functions",
   globalcode:
-    "Code that affects the entire contract environment, such as library imports, pragma directives, and interface definitions.",
+    "add external libraries import or interface definitions",
 } as const;
 
 type CodeType = keyof typeof CODE_TYPES;

@@ -1,16 +1,16 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { CodeCell } from './CodeCell';
-import { Logo } from './Logo';
-import { NetworkStatus } from './NetworkStatus';
-import { Toolbar } from './Toolbar/Toolbar';
-import { AddCellButton } from './AddCellButton';
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { CodeCell } from "./CodeCell";
+import { Logo } from "./Logo";
+import { NetworkStatus } from "./NetworkStatus";
+import { Toolbar } from "./Toolbar/Toolbar";
+import { AddCellButton } from "./AddCellButton";
+import { useAtom, useSetAtom } from "jotai";
+import { AddFragment, FragmentAtomsAtom, FragmentData } from "@/store/GlobalFragments";
 
 export function Notebook() {
-  const [cells] = useState<Array<{ id: string; status: 'success' | 'error' }>>([
-    { id: 'cell-1', status: 'success' },
-    { id: 'cell-2', status: 'error' }
-  ]);
+  const [fragmentAtoms] = useAtom(FragmentAtomsAtom);
+  const addFragment = useSetAtom(AddFragment);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-neutral-950 to-neutral-900">
@@ -29,12 +29,17 @@ export function Notebook() {
 
         {/* Code Cells */}
         <div className="space-y-6 relative">
-          {cells.map(({ id, status }) => (
-            <CodeCell key={id} id={id} initialStatus={status} />
+          {fragmentAtoms.map((fragmentAtom, index) => (
+            <CodeCell
+              className="mb-2"
+              key={(fragmentAtom as unknown as FragmentData).uuid}
+              fragmentAtom={fragmentAtom}
+              index={index}
+            />
           ))}
         </div>
 
-        <AddCellButton />
+        <AddCellButton onClick={() => addFragment()} />
       </div>
     </div>
   );
