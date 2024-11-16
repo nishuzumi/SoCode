@@ -99,7 +99,7 @@ export function decodeInstructions(
     bytecode: Buffer,
     compressedSourcemaps: string,
     fileIdToSourceFile: Map<number, string>,
-    isDeployment: boolean
+    _isDeployment: boolean
 ): Instruction[] {
     const sourceMaps = uncompressSourcemaps(compressedSourcemaps);
 

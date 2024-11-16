@@ -1,11 +1,9 @@
+import { Source } from "@/lib/source";
 import { CompileError, DecodeVariableResult } from "@/types";
 import { atom } from "jotai";
 import { atomWithImmer } from "jotai-immer";
-import { nanoid } from "nanoid";
 import { splitAtom } from "jotai/utils";
-import { Source } from "@/lib/source";
-import { VM } from "@ethereumjs/vm";
-import { EthVM } from "@/lib/vm";
+import { nanoid } from "nanoid";
 
 export type FragmentCodeDetail = {
   runnableCode?: string;
